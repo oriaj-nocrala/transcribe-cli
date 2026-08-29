@@ -2,14 +2,12 @@ use std::sync::Mutex;
 
 use indicatif::{ProgressBar, ProgressStyle};
 
-use crate::ports::progress::{ProgressSink, ProgressUnit};
+use crate::ports::progress::ProgressSink;
 
 const BAR_CHARS: &str = "#>-";
 
 /// Adaptador de entrada/UI: implementa `ProgressSink` mostrando una barra de
-/// progreso en terminal con `indicatif`. Se reutiliza tanto para la descarga
-/// de modelos (bytes) como para la inferencia (porcentaje), con el mismo
-/// estilo visual, para que ambas fases compartan una única UX de progreso.
+/// progreso en terminal con `indicatif` para la descarga del runtime de CrispASR.
 pub struct IndicatifProgress {
     bar: Mutex<Option<ProgressBar>>,
 }
@@ -29,9 +27,9 @@ impl Default for IndicatifProgress {
 }
 
 impl ProgressSink for IndicatifProgress {
-    fn on_start(&self, unit: ProgressUnit, total: Option<u64>) {
-        let pb = match (unit, total) {
-            (ProgressUnit::Bytes, Some(total)) => {
+    fn on_start(&self, total: Option<u64>) {
+        let pb = match total {
+            Some(total) => {
                 let pb = ProgressBar::new(total);
                 pb.set_style(
                     ProgressStyle::with_template(
@@ -42,20 +40,9 @@ impl ProgressSink for IndicatifProgress {
                 );
                 pb
             }
-            (ProgressUnit::Bytes, None) => {
+            None => {
                 let pb = ProgressBar::new_spinner();
                 pb.set_style(ProgressStyle::with_template("{spinner:.green} {bytes} descargados").unwrap());
-                pb
-            }
-            (ProgressUnit::Percent, _) => {
-                let pb = ProgressBar::new(100);
-                pb.set_style(
-                    ProgressStyle::with_template(
-                        "{spinner:.green} [{bar:40.cyan/blue}] {percent}% ({eta})",
-                    )
-                    .unwrap()
-                    .progress_chars(BAR_CHARS),
-                );
                 pb
             }
         };
