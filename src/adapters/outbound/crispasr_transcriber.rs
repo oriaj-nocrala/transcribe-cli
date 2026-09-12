@@ -83,6 +83,13 @@ impl Transcriber for CrispAsrTranscriber {
             .arg("-of")
             .arg(&out_base);
 
+        // Acompaña al `-m auto` de arriba: no es una ruta a un fichero, es
+        // la preferencia que usa crispasr al resolver el modelo del backend
+        // contra su registro (y a descargarlo, si no lo tiene).
+        if let Some(quant) = &options.model_quant {
+            cmd.arg("--model-quant").arg(quant);
+        }
+
         if options.translate_to_english {
             cmd.arg("-tr");
         }

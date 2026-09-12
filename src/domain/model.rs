@@ -34,6 +34,14 @@ pub struct TranscribeOptions {
     pub language: Option<String>,
     pub translate_to_english: bool,
     pub backend: String,
+    /// Cuantización preferida del modelo del backend (p.ej. "q4_k", "q5_k",
+    /// "q8_0", "f16"), o `None` para dejar que CrispASR resuelva la de su
+    /// registro. Un mismo backend está publicado en varias: `qwen3-1.7b` cae
+    /// por defecto en la `q4_k`, que es la más chica y también la que más se
+    /// equivoca justo en lo que más cuesta caro — palabras raras y nombres
+    /// propios. Passthrough libre al `--model-quant` de crispasr, igual que
+    /// `backend`: si la variante no existe, el error lo da él.
+    pub model_quant: Option<String>,
     /// Si es `false`, transcribe el audio completo sin saltarse silencios.
     pub vad: bool,
     /// Pasa a `-t` de crispasr. Con backends acelerados por GPU (el caso
@@ -49,6 +57,7 @@ impl Default for TranscribeOptions {
             language: None,
             translate_to_english: false,
             backend: "qwen3-1.7b".to_string(),
+            model_quant: None,
             vad: true,
             threads: std::thread::available_parallelism()
                 .map(|n| n.get() as u32)

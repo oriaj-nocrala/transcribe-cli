@@ -272,19 +272,21 @@ async fn main() -> Result<()> {
         CliCommand::Transcribe {
             input,
             backend,
+            model_quant,
             language,
             translate,
             threads,
             timestamps,
             format,
             output,
-            no_vad,
+            vad,
         } => {
             let mut options = TranscribeOptions {
                 language,
                 translate_to_english: translate,
                 backend,
-                vad: !no_vad,
+                model_quant,
+                vad,
                 ..TranscribeOptions::default()
             };
             if let Some(threads) = threads {

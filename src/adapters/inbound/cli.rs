@@ -39,6 +39,14 @@ pub enum Command {
         #[arg(short, long, default_value = "qwen3-1.7b")]
         backend: String,
 
+        /// Cuantización del modelo (p.ej. "q4_k", "q5_k", "q8_0", "f16").
+        /// Por defecto, la que resuelva CrispASR: para `qwen3-1.7b` es la
+        /// `q4_k`, la más chica y la que más se equivoca en palabras raras y
+        /// nombres propios. Si la variante pedida no está en caché, se
+        /// descarga sola la primera vez.
+        #[arg(long, env = "TRANSCRIBE_CLI_QUANT", value_name = "QUANT")]
+        model_quant: Option<String>,
+
         /// Código de idioma del audio (p.ej. "es", "en"). Por defecto, autodetección.
         /// Ojo: algunos backends traducen en vez de transcribir si el idioma
         /// pedido no coincide con el hablado en el audio.
@@ -67,9 +75,11 @@ pub enum Command {
         #[arg(short, long)]
         output: Option<PathBuf>,
 
-        /// Desactiva la detección de voz (VAD): transcribe el audio completo,
-        /// incluidos los silencios.
+        /// Activa la detección de voz (VAD): salta silencios en vez de
+        /// transcribir el audio completo. Desactivado por defecto — Silero
+        /// clasifica de vez en cuando tramos con voz real como silencio y
+        /// esos quedan afuera de la transcripción sin ningún aviso.
         #[arg(long)]
-        no_vad: bool,
+        vad: bool,
     },
 }
