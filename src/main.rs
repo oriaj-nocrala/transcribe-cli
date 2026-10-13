@@ -26,7 +26,7 @@ use ports::Transcriber;
 /// Versión de CrispASR validada en desarrollo — fijar la versión evita que un
 /// release nuevo cambie de comportamiento por debajo nuestro sin que nos
 /// enteremos.
-const CRISPASR_VERSION: &str = "v0.8.30";
+const CRISPASR_VERSION: &str = "v0.8.43";
 /// Único asset soportado por ahora: Linux x86_64 con CUDA 13 (este entorno de
 /// desarrollo). Detectar SO/arch/GPU y elegir entre las demás variantes del
 /// release (CPU/CUDA/Vulkan/HIP/macOS/Windows) queda para una fase futura.
