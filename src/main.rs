@@ -21,7 +21,11 @@ use adapters::inbound::{Cli, Command as CliCommand, IndicatifProgress, OutputFor
 use adapters::outbound::CrispAsrTranscriber;
 use application::TranscribeAudioUseCase;
 use domain::model::{Transcript, TranscribeOptions};
-use ports::Transcriber;
+use ports::{Transcriber, TranscriberError};
+
+/// Código de salida cuando la GPU no rindió (VRAM, caída a CPU, sin GPU).
+/// Lo lee `transcribe_pending` en agenda-engine: no lo cambies sin tocarlo allá.
+const EXIT_GPU: i32 = 3;
 
 /// Versión de CrispASR validada en desarrollo — fijar la versión evita que un
 /// release nuevo cambie de comportamiento por debajo nuestro sin que nos
@@ -298,9 +302,19 @@ async fn main() -> Result<()> {
 
             let transcriber: Arc<dyn Transcriber> = Arc::new(CrispAsrTranscriber::new(bin_path));
             let use_case = TranscribeAudioUseCase::new(transcriber);
-            let transcript = use_case
-                .execute(&input, &options, progress)
-                .with_context(|| format!("fallo transcribiendo '{}'", input.display()))?;
+            let transcript = match use_case.execute(&input, &options, progress) {
+                Ok(t) => t,
+                // Código propio para que quien nos llame (el pipeline de
+                // fichas) distinga "la máquina no da" de "este audio falló"
+                // y no siga intentando con el resto de la tanda.
+                Err(TranscriberError::Gpu(msg)) => {
+                    eprintln!("\nERROR DE GPU transcribiendo '{}': {msg}", input.display());
+                    std::process::exit(EXIT_GPU);
+                }
+                Err(e) => {
+                    return Err(e).with_context(|| format!("fallo transcribiendo '{}'", input.display()));
+                }
+            };
 
             let format = format.unwrap_or_else(|| {
                 let output_is_md = output

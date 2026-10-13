@@ -8,6 +8,12 @@ use crate::ports::progress::ProgressSink;
 pub enum TranscriberError {
     #[error("fallo durante la transcripción: {0}")]
     Inference(String),
+    /// La GPU no rindió como se esperaba: faltó VRAM, algo cayó a CPU o no
+    /// se detectó ninguna GPU. Se separa de `Inference` porque no es un
+    /// problema del audio sino de la máquina: reintentar con otro archivo
+    /// va a fallar igual hasta liberar la GPU.
+    #[error("{0}")]
+    Gpu(String),
 }
 
 /// Puerto de salida: motor que convierte un archivo de audio/vídeo en texto.
